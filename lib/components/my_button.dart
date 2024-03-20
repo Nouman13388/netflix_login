@@ -4,27 +4,35 @@ class MyButton extends StatelessWidget {
   final String text;
   final Function()? onTap;
 
-  const MyButton({super.key, required this.text, required this.onTap});
+  const MyButton({Key? key, required this.text, required this.onTap})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        margin: const EdgeInsets.symmetric(vertical: 25),
-        decoration: BoxDecoration(
-          color: Colors.red[700],
-          borderRadius: BorderRadius.circular(5),
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ButtonStyle(
+        elevation: MaterialStateProperty.resolveWith<double>((states) {
+          if (states.contains(MaterialState.hovered)) {
+            return 5; // Elevation when hovered
+          }
+          return 0; // Default elevation
+        }),
+        backgroundColor: MaterialStateProperty.all<Color>(Colors.red[700]!),
+        shape: MaterialStateProperty.all<OutlinedBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
         ),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 100.0, vertical: 15.0),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
         ),
       ),

@@ -2,10 +2,12 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix_login/components/my_button.dart';
+import 'package:netflix_login/components/user.dart';
+import 'package:netflix_login/pages/home_page.dart';
 import 'package:netflix_login/pages/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -47,12 +49,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
           Center(
             child: Container(
-              width: 400,
-              padding: const EdgeInsets.only(
-                left: 50,
-                right: 50,
-                top: 70,
-                bottom: 70,
+              width: MediaQuery.of(context).size.width > 400
+                  ? 400
+                  : MediaQuery.of(context).size.width * 0.9,
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 400 ? 50 : 20,
+                vertical: MediaQuery.of(context).size.width > 400 ? 70 : 20,
               ),
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.8),
@@ -143,10 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: const TextStyle(
                             color: Colors.grey,
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              // Add your action here
-                            },
+                          recognizer: TapGestureRecognizer()..onTap = () {},
                         ),
                       ),
                     ],

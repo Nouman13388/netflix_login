@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "253389045243",
+    "project_id": "login-page-87853",
+    "storage_bucket": "login-page-87853.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:253389045243:android:9ad2db2515a37e8bf3df5e",
+        "android_client_info": {
+          "package_name": "com.example.netflix_login"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHxBQpz4abpeepYp5dCJBC7U6fURfBcRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

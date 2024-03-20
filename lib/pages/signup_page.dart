@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -143,10 +145,8 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 20),
                   MyButton(
-                    text: 'Sign Up',
-                    onTap: () {
-                      // Implement sign-up logic
-                    },
+                    text: 'Create',
+                    onTap: () {},
                   ),
                   const SizedBox(height: 20),
                   Row(
