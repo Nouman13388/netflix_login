@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:ui';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:netflix_login/components/my_button.dart';
-import 'package:netflix_login/components/user.dart';
 import 'package:netflix_login/pages/home_page.dart';
 import 'package:netflix_login/pages/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -17,6 +19,63 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = true;
+
+  Future<bool> _authenticateUser(BuildContext context) async {
+    final String username = usernameController.text.trim();
+    final String password = passwordController.text.trim();
+
+    try {
+      // Sign in with email and password
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: username,
+        password: password,
+      );
+
+      // Authentication successful
+      return true;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      // Handle specific authentication errors
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'Invalid email address.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'User not found.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Invalid password.';
+          break;
+        // Handle other errors as needed
+        default:
+          errorMessage = 'Authentication failed: ${e.message}';
+          break;
+      }
+
+      // Show error message using SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      // Return false to indicate authentication failure
+      return false;
+    } catch (error) {
+      // General error handling
+      print('Authentication failed: $error');
+      // Show general error message using SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Authentication failed: $error'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      // Return false to indicate authentication failure
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +166,20 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   MyButton(
                     text: 'Sign In',
-                    onTap: () {},
+                    onTap: () async {
+                      final isAuthenticated = await _authenticateUser(context);
+
+                      if (isAuthenticated) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HomePage(
+                              user: 'user',
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 20),
                   Row(

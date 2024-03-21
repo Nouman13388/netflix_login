@@ -1,8 +1,8 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'dart:ui';
-import 'package:flutter/gestures.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:netflix_login/components/my_button.dart';
 import 'package:netflix_login/pages/login_page.dart';
 
@@ -19,6 +19,75 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   bool agreeToTerms = false;
+
+  Future<void> _createAccount() async {
+    try {
+      final String email = emailController.text.trim();
+      final String password = passwordController.text.trim();
+      final String confirmPassword = confirmPasswordController.text.trim();
+
+      // Validate email and password
+      if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+        // Show error message
+        return;
+      }
+
+      if (password != confirmPassword) {
+        // Show error message
+        return;
+      }
+
+      // Create user account using Firebase Authentication
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Additional functionalities after successful account creation
+      // For example, you can save user data to a database or perform other tasks
+      // For simplicity, let's print the user data
+      print('User created: ${userCredential.user}');
+
+      // Account created successfully, navigate to login page
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    } catch (error) {
+      // Handle any errors that occur during account creation
+      print('Error creating user: $error');
+      // Show error message
+      String errorMessage = 'An error occurred, please try again.';
+      if (error is FirebaseAuthException) {
+        switch (error.code) {
+          case 'weak-password':
+            errorMessage = 'The password provided is too weak.';
+            break;
+          case 'email-already-in-use':
+            errorMessage = 'The account already exists for that email.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'The email address is not valid.';
+            break;
+          case 'empty-email':
+            errorMessage = 'The email address is empty.';
+            break;
+          case 'empty-password':
+            errorMessage = 'The password is empty.';
+            break;
+          default:
+            errorMessage = 'An error occurred, please try again later.';
+        }
+      }
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +215,7 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 20),
                   MyButton(
                     text: 'Create',
-                    onTap: () {},
+                    onTap: _createAccount,
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -175,6 +244,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
                   const SizedBox(height: 10),
                   Text.rich(
                     TextSpan(

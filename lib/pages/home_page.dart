@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:netflix_login/pages/login_page.dart';
 
 class HomePage extends StatelessWidget {
   final String user;
@@ -22,14 +23,16 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                );
               },
               child: const Text('Log out'),
             ),
           ],
         ),
       ),
-
     );
   }
 }
