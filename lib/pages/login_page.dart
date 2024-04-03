@@ -1,15 +1,17 @@
-import 'dart:async';
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:netflix_login/components/my_button.dart';
 import 'package:netflix_login/pages/home_page.dart';
 import 'package:netflix_login/pages/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -19,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = true;
+  bool _isLoading = false; // Track loading state
 
   Future<bool> _authenticateUser(BuildContext context) async {
     final String username = usernameController.text.trim();
@@ -56,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
 
@@ -69,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Authentication failed: $error'),
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
       // Return false to indicate authentication failure
@@ -84,7 +87,9 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Image.asset(
-          'lib/images/Netflix-Logo.png',
+          MediaQuery.of(context).size.width > 400
+              ? 'lib/images/Netflix-Logo.png'
+              : 'lib/images/N.png', // Change logo based on screen size
           width: 200,
           height: 120,
         ),
@@ -247,6 +252,38 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          _signInWithGoogle();
+                        },
+                        child: Image.asset(
+                          'lib/images/google.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _signInWithFacebook,
+                        child: Icon(
+                          Icons.facebook,
+                          color: Colors.blue[900],
+                          size: 30,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _signInAsGuest,
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.grey,
+                          size: 30,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Text.rich(
                     TextSpan(
                       text:
@@ -276,5 +313,152 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Initialize Google Sign-In
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId:
+            '253389045243-o9e6difsv11l66pogopk339vlth43r0d.apps.googleusercontent.com',
+      );
+
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
+
+      if (googleSignInAccount != null) {
+        final GoogleSignInAuthentication googleAuth =
+            await googleSignInAccount.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Sign in to Firebase with the Google credential
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Navigate to the home screen after successful sign-in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const HomePage(
+                    user: 'user',
+                  )),
+        );
+      }
+    } catch (error) {
+      // Handle Google sign-in errors
+      String errorMessage = 'An error occurred. Please try again later.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+        ),
+      );
+
+      if (kDebugMode) {
+        print("Error signing in with Google: $error");
+      }
+    } finally {
+      // Set loading state to false
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _signInWithFacebook() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Log in with Facebook
+      final result = await FacebookAuth.instance.login();
+
+      if (result.status == LoginStatus.success) {
+        final OAuthCredential credential =
+            FacebookAuthProvider.credential(result.accessToken!.token);
+
+        // Sign in to Firebase with the Facebook credential
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Navigate to the home screen after successful sign-in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomePage(
+              user: 'user',
+            ),
+          ),
+        );
+      } else if (result.status == LoginStatus.cancelled) {
+        // Handle login cancellation
+        print('Facebook login cancelled');
+      } else {
+        // Handle login failure
+        print('Facebook login failed');
+      }
+    } catch (error) {
+      // Handle Facebook sign-in errors
+      String errorMessage = 'An error occurred. Please try again later.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+        ),
+      );
+
+      if (kDebugMode) {
+        print("Error signing in with Facebook: $error");
+      }
+    } finally {
+      // Set loading state to false
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _signInAsGuest() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInAnonymously();
+
+      // Navigate to the home screen after successful sign-in
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomePage(
+            user: 'guest',
+          ),
+        ),
+      );
+    } catch (error) {
+      // Handle guest sign-in errors
+      String errorMessage = 'An error occurred. Please try again later.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+        ),
+      );
+
+      if (kDebugMode) {
+        print("Error signing in as guest: $error");
+      }
+    } finally {
+      // Set loading state to false
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 }
